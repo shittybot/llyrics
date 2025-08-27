@@ -81,12 +81,16 @@ type searchEngineOptions = (typeof searchEngines)[number] | (string & {});
  * @param {searchOptions} searchOptions Options to refine your search
  * @returns Promise<fetchResponse>
  * @example
- * const { find } = require('llyrics');
+ * const { find, isNotFoundResponse } = require('llyrics');
+ *
  * const response = await find({
  *    song: 'Bohemian Rhapsody',
  *    engine: 'musixmatch'
  * });
- * console.log(response.artist);
+ *
+ * if (!isNotFoundResponse(response)) {
+ *    console.log(response.artist);
+ * }
  */
 async function find(searchOptions: searchOptions): Promise<fetchResponse | notFoundResponse> {
   try {
