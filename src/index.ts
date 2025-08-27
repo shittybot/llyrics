@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { version } from '../package.json';
 
-interface searchOptions {
+export interface searchOptions {
   /**
    * The song title
    */
@@ -23,7 +23,7 @@ interface searchOptions {
   forceSearch?: boolean;
 }
 
-interface fetchResponse {
+export interface fetchResponse {
   /**
    * The artist
    */
@@ -60,6 +60,17 @@ interface fetchResponse {
   status: number;
 }
 
+export interface notFoundResponse {
+  /**
+   * The response status
+   */
+  status: 404;
+}
+
+export function isNotFoundResponse(response: fetchResponse | notFoundResponse): response is notFoundResponse {
+  return response.status === 404;
+}
+
 const apiBaseUrl = 'https://lyrics.lewdhutao.my.eu.org/v2';
 const searchEngines = ['youtube', 'musixmatch'] as const;
 
@@ -70,43 +81,50 @@ type searchEngineOptions = (typeof searchEngines)[number] | (string & {});
  * @param {searchOptions} searchOptions Options to refine your search
  * @returns Promise<fetchResponse>
  * @example
- * const { find } = require('llyrics');
+ * const { find, isNotFoundResponse } = require('llyrics');
+ *
  * const response = await find({
  *    song: 'Bohemian Rhapsody',
  *    engine: 'musixmatch'
  * });
- * console.log(response.artist);
+ *
+ * if (!isNotFoundResponse(response)) {
+ *    console.log(response.artist);
+ * }
  */
-async function find(searchOptions: searchOptions): Promise<fetchResponse> {
-  const fetchParams: Record<string, string> = {
-    title: searchOptions.song,
-  };
+async function find(searchOptions: searchOptions): Promise<fetchResponse | notFoundResponse> {
+  try {
+    const fetchParams = {
+      song: searchOptions.song,
+      artist: searchOptions.artist,
+      engine: searchOptions.engine,
+    };
 
-  if (searchOptions.forceSearch === true) {
-    for (const currentEngine of searchEngines) {
-      try {
-        const iterationSearch = await find({
-          song: searchOptions.song,
-          artist: searchOptions.artist,
-          engine: currentEngine,
-        });
-
-        if (iterationSearch.status === 200 && iterationSearch.artist !== undefined) {
-          return iterationSearch;
-        }
-      } catch {
-        continue;
-      }
+    if (!searchOptions.forceSearch) {
+      return search(fetchParams);
     }
-  }
 
-  if (searchOptions.engine === 'musixmatch' && searchOptions.artist) {
-    fetchParams.artist = searchOptions.artist;
+    return await Promise.any(
+      searchEngines.map((currentEngine) => {
+        return find({ ...fetchParams, engine: currentEngine });
+      }),
+    );
+  } catch {
+    return { status: 404 };
   }
+}
 
+async function search(searchOptions: Omit<searchOptions, 'forceSearch'>): Promise<fetchResponse | notFoundResponse> {
   const fetchResponse = await axios.get(`${apiBaseUrl}/${searchOptions.engine ?? 'youtube'}/lyrics`, {
-    params: fetchParams,
+    params: {
+      title: searchOptions.song,
+      artist: searchOptions.artist,
+    },
   });
+
+  if (!fetchResponse.data.data?.lyrics) {
+    throw new Error('No lyrics were found.');
+  }
 
   return {
     artist: fetchResponse.data.data.artistName,
