@@ -119,7 +119,7 @@ async function search(searchOptions: Omit<searchOptions, 'forceSearch'>): Promis
   });
 
   if (!fetchResponse.data.data?.lyrics) {
-    throw new Error('song not found');
+    throw new Error('No lyrics were found.');
   }
 
   return {
