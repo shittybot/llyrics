@@ -19,33 +19,35 @@
 - **Auto Search**: If a search fails on the first specified search engine, llyrics automatically retries the search on another available search engine for a better lyrics result.
 - **Easy to Use**: You can quickly search for song lyrics by providing the song title and, optionally, the artist name.
 
-
 # 🪓 Installation
+
 ```sh
 $ npm install llyrics
 $ yarn add llyrics
 ```
 
-
 # 💾 Example
+
 ```js
-const { find } = require("llyrics");
+const { find, isNotFoundResponse } = require('llyrics');
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   const response = await find({
-    song: "Bohemian Rhapsody",
-    engine: "youtube",
+    song: 'Bohemian Rhapsody',
+    engine: 'youtube',
     forceSearch: true,
   });
 
-  if (interaction.commandName === "lyrics") {
-    await interaction.reply({ content: response.lyrics, ephemeral: true });
+  if (interaction.commandName === 'lyrics') {
+    if (response && !isNotFoundResponse(response)) {
+      await interaction.reply({ content: response.lyrics, ephemeral: true });
+    }
   }
 });
 
-client.login("token");
+client.login('token');
 ```
 
 # 🔧 Usage
@@ -62,19 +64,16 @@ client.login("token");
 
 ```
 
-
 **Response format**
+
 ```js
 {
   artist: string,     // Artist's name
   title: string,      // Song title
-  id: number,         // Musixmatch track ID (only for Musixmatch endpoint)
+  id: number,         // Track ID
   engine: string,     // Search engine used
   artworkURL: string, // Artwork URL
   lyrics: string,     // Song lyrics
   status: string,     // Response status code
 }
 ```
-
-The default search engine is YouTube. If you prefer not to use YouTube, you can specify your desired search engine.
-
