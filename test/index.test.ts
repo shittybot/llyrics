@@ -1,4 +1,4 @@
-import { find } from '../src/index';
+import { find, isNotFoundResponse } from '../src/index';
 
 (async () => {
   try {
@@ -10,7 +10,7 @@ import { find } from '../src/index';
 
     async function getLyrics() {
       try {
-        if (response) {
+        if (response && !isNotFoundResponse(response)) {
           console.log('Artist:', response.artist);
           console.log('Title:', response.title);
           console.log('Engine:', response.engine);
