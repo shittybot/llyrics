@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/shittybot/llyrics#readme",
   "devDependencies": {
-    "@types/node": "^24.3.0",
+    "@types/node": "^25.3.5",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
     "dotenv": "^17.2.1",
